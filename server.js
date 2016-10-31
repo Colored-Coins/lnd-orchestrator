@@ -14,6 +14,8 @@ const
 
 // Setup Express
 app.set('port', process.env.PORT || 9001)
+app.set('host', process.env.HOST || '127.0.0.1')
+
 app.param('wid', (req, res, next, wid) => loadWallet(wid, iferr(next, w => w ? (req.wallet=w, next()) : next(new Error('404')))))
 
 app.use(require('body-parser').json())
@@ -27,4 +29,4 @@ app.post('/w/:wid/pay',    (req, res, next) => (pay(req.wallet, req.body.dest, r
 app.post('/w/:wid/settle', (req, res, next) => settle(req.wallet, iferr(next, res.send)))
 
 // Launch
-app.listen(app.get('port'), _ => console.log(`Listening on ${app.get('port')}`))
+app.listen(app.get('port'), app.get('host'), _ => console.log(`Listening on ${app.get('host')}:${app.get('port')}`))
