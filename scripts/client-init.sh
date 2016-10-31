@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 echo "connecting hub ($HUB_RPC) <--> client($1@$LND_HOST:$2)"
 hubpeerid=`lncli --rpcserver $HUB_RPC connect $1@$LND_HOST:$2 | jq -r '.peer_id'`
