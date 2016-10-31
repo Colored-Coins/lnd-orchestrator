@@ -1,0 +1,32 @@
+{
+  "name": "lnc-orchestrator",
+  "version": "0.1.0",
+  "description": "lnc orchestrator",
+  "scripts": {
+    "start": "./start.sh"
+  },
+  "author": "Nadav Ivgi",
+  "license": "https://github.com/Colu-platform/colu-nodejs/blob/master/LICENSE",
+  "engines": {
+    "node": "^6.0.0"
+  },
+  "dependencies": {
+    "babel-plugin-transform-object-rest-spread": "^6.16.0",
+    "body-parser": "^1.15.2",
+    "debug": "^2.2.0",
+    "express": "^4.13.4",
+    "grpc": "^1.0.0",
+    "iferr": "^0.1.5",
+    "lru-native": "^0.4.0",
+    "morgan": "^1.7.0",
+    "redis": "^2.6.2",
+    "rx-node": "^1.0.2"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.14.0",
+    "babel-plugin-syntax-object-rest-spread": "^6.13.0",
+    "babel-preset-es2015": "^6.14.0",
+    "babel-register": "^6.14.0",
+    "longjohn": "^0.2.11"
+  }
+}
