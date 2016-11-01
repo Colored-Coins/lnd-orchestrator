@@ -12,5 +12,5 @@ echo openchannel req: lncli --rpcserver $HUB_RPC openchannel --peer_id $hubpeeri
 
 echo waiting for open tx to finalize and be sent...
 
-sed '/PEER: Creating chan barrier for ChannelPoint /q' <(tail -n 1 -f $LND_PATH/$wid/proc.log)
+sed '/PEER: Creating chan barrier for ChannelPoint /q' <(tail -n 1 -f $LND_PATH/$3/proc.log)
 btcctl --simnet --wallet --rpcserver $BTCW_HOST --rpcuser "$BTCW_USER" --rpcpass "$BTCW_PASS" generate 1
