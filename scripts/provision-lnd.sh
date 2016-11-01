@@ -30,7 +30,7 @@ rpcport=$((peerport + 1))
     redis("HMSET w:" wid " idpub " $2 " peerport " $3 " rpcport " $4);
     rpub(wid, "ready");
     rpub(wid, "wallet {\"wid\":\"" wid "\",\"idpub\":\"" $2 "\"}", 1);
-    system("./client-init.sh \"" $2 "\" \"" $3 "\" &")
+    system("./client-init.sh \"" $2 "\" \"" $3 "\" \"" wid "\" &")
   }
   $1 == "__CH_INIT__" {
     rpub(wid, "ch_init {\"outpoint\":\"" $2 "\",\"peer\":\"" $3 "\",\"capacity\":\"" $4 "\"}");
@@ -54,7 +54,7 @@ rpcport=$((peerport + 1))
   }
 
   { fflush() }
-' 2>&1 | tee -a /tmp/run-lnd-parsed.log &
+' 2>&1 | tee -a /tmp/run-lnd-$wid.log | tee -a /tmp/run-lnd-parsed.log &
 
 # Periodically update the balance (should be updated live, but just to make sure we're always synced)
 #(
