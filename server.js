@@ -20,13 +20,15 @@ app.param('wid', (req, res, next, wid) => loadWallet(wid, iferr(next, w => w ? (
 
 app.use(require('body-parser').json())
 app.use(require('morgan')('dev'))
-app.use((req, res, next) => (console.log('req',req.path,req.body,req.headers),next()))
 
 app.post('/provision',     (req, res, next) => provision(iferr(next, wid => res.send(wid))))
 app.get ('/w/:wid',        (req, res, next) => getBalance(req.wallet, iferr(next,
                                                  balance => res.send({ ...req.wallet, balance }))))
 app.post('/w/:wid/pay',    (req, res, next) => (pay(req.wallet, req.body.dest, req.body.amount), res.sendStatus(204)))
 app.post('/w/:wid/settle', (req, res, next) => settle(req.wallet, iferr(next, res.send)))
+
+// send the full errors, JSON-formatted, when on development mode
+app.settings.env == 'development' && app.use((err, req, res, next) => res.status(err.statusCode||500).send(err))
 
 // Launch
 app.listen(app.get('port'), app.get('host'), _ => console.log(`Listening on ${app.get('host')}:${app.get('port')}`))
