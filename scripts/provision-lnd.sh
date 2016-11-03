@@ -16,7 +16,13 @@ rpcport=$((peerport + 1))
 # Provision new lnd daemon, parse output and publish to redis
 ./run-lnd.sh $wid $peerport $rpcport | gawk -v wid="$wid" -v REDIS="$REDIS" '
   function redis(cmd) { print "REDIS: " cmd; system(REDIS" "cmd" &") }
-  function rpub(wid, data, pubonly) { redis("PUBLISH s:" wid " '\''" data "'\''"); if (!pubonly) redis("RPUSH e:" wid " '\''" data "'\''") }
+  function rpub(wid, data, pubonly) {
+    if (index(data, "}")) sub(/\}$/, ",\"ts\":" systime() "}", data)
+    else data = data " {\"ts\":" systime() "}"
+
+    redis("PUBLISH s:" wid " '\''" data "'\''")
+    if (!pubonly) redis("RPUSH e:" wid " '\''" data "'\''")
+  }
 
   { print; }
 
@@ -46,7 +52,6 @@ rpcport=$((peerport + 1))
     rpub(wid, "tx {\"outpoint\":\"" $2 "\",\"height\":\"" $3 "\",\"theirIndex\":\"" $4 "\",\"amount\":\"" $5 "\"}")
   }
   $1 == "__STATE_CHAIN__" {
-    print "got __STATE_CHAIN__"
     rpub(wid, "chain {\"outpoint\":\"" $2 "\",\"chain\":\"" $3 "\",\"height\":\"" $4 "\",\"ourBalance\":\"" $5 "\",\"theirBalance\":\"" $6 "\"}", 1)
   }
   $1 == "__STATE_ACCEPT__" {
