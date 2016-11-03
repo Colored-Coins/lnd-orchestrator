@@ -28,8 +28,10 @@ app.post('/w/:wid/pay',    (req, res, next) => (pay(req.wallet, req.body.dest, r
 app.post('/w/:wid/settle', (req, res, next) => settle(req.wallet, iferr(next, res.send)))
 
 // send the full errors, JSON-formatted, when on development mode
-app.settings.env == 'development' && app.use((err, req, res, next) =>
-  res.status(err.statusCode||500).send({ message: ''+err, ...err }))
+app.settings.env == 'development' && app.use((err, req, res, next) => {
+  console.error(err.stack || err)
+  res.status(err.statusCode||500).send({ message: ''+err, ...err })
+})
 
 // Launch
 app.listen(app.get('port'), app.get('host'), _ => console.log(`Listening on ${app.get('host')}:${app.get('port')}`))
