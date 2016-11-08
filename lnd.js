@@ -1,12 +1,14 @@
 import path from 'path'
 import iferr from 'iferr'
+import brev from 'buffer-reverse'
 import { spawn } from 'child_process'
 import { fromStream  } from 'rx-node'
 import grpc from 'grpc'
-import { Lightning, ChannelBalanceRequest, SendRequest, CloseChannelRequest, ChannelPoint, GetInfoRequest } from 'lnrpc'
+import { Lightning, ChannelBalanceRequest, SendRequest, CloseChannelRequest, ChannelPoint } from 'lnrpc'
 
 const SCRIPTS = path.join(__dirname, 'scripts')
     , PROVISION_SCRIPT = path.join(SCRIPTS, 'provision-lnd-wid.sh')
+    , { LND_HOST } = process.env
 
 module.exports = _ => ({
   provision: cb => {
@@ -24,19 +26,31 @@ module.exports = _ => ({
     })
     proc.stderr.on('data', d => cb(new Error('provision-lnd stderr: ' + d.toString())))
     proc.on('error', cb)
-    const dbgev = (o, label) => o.emit=(emit=>function(...a){return (console.log(label, ...a, '---', (''+a[a.length-1])),emit.apply(this, a))})(o.emit)
-    dbgev(proc, 'proc')
-    dbgev(proc.stdout, 'proc.stdout')
-    dbgev(proc.stderr, 'proc.stderr')
   }
-, getBalance: (wallet, cb) => lndClient(wallet.rpcport).channelBalance(new ChannelBalanceRequest, iferr(cb, b => cb(null, b.balance)))
-, pay: (wallet, dest, amt, cb) => lndPayStream(wallet.rpcport).write(new SendRequest(new Buffer(dest, 'hex'), +amt))
+
+, getBalance: (wallet, cb) =>
+    lndClient(wallet.rpcport).channelBalance(
+      new ChannelBalanceRequest,
+      iferr(cb, b => cb(null, b.balance))
+    )
+
+, pay: (wallet, dest, amt) =>
+    lndPayStream(wallet.rpcport)
+      .write(new SendRequest(toBuffer(dest), +amt))
+
+, settle: (wallet, outpoint) =>
+    lndClient(wallet.rpcport).closeChannel(
+      l(new CloseChannelRequest(toChannelPoint(outpoint)))
+    )
 })
 
 
-// @TODO: LRU
+const toBuffer = x => new Buffer(x, 'hex')
+    , toChannelPoint = (point, [ txid, index ] = point.split(':')) => new ChannelPoint({ funding_txid: brev(toBuffer(txid)), output_index: +index })
+
+  // @TODO: LRU
 const lndClient = (_store => rpcport =>
-  _store[rpcport] || (_store[rpcport] = new Lightning(process.env.LND_HOST+':'+rpcport, grpc.credentials.createInsecure()))
+  _store[rpcport] || (_store[rpcport] = new Lightning(LND_HOST+':'+rpcport, grpc.credentials.createInsecure()))
 )({})
 
 const lndPayStream = (_store => rpcport =>

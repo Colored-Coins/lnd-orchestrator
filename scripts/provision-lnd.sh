@@ -57,7 +57,12 @@ rpcport=$((peerport + 1))
   $1 == "__STATE_ACCEPT__" {
     rpub(wid, "accept {\"outpoint\":\"" $2 "\",\"height\":\"" $3 "\",\"ourIndex\":\"" $4 "\",\"theirIndex\":\"" $5 "\",\"ourBalance\":\"" $6 "\",\"theirBalance\":\"" $7 "\"}")
   }
-
+  $1 == "__CH_SETTLE_INIT__" {
+    rpub(wid, "ch_settle_init {\"outpoint\":\"" $2 "\",\"txid\":\"" $3 "\"}")
+  }
+  $1 == "__CH_SETTLE_DONE__" {
+    rpub(wid, "ch_settle_done {\"outpoint\":\"" $2 "\"}")
+  }
   { fflush() }
 ' 2>&1 | tee -a /tmp/run-lnd-$wid.log | tee -a /tmp/run-lnd-parsed.log &
 

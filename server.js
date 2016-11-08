@@ -10,7 +10,7 @@ const
 
 // Model
 , { loadWallet }   = require('./model')(redis)
-, { provision, getBalance, pay } = require('./lnd')()
+, { provision, getBalance, pay, settle } = require('./lnd')()
 
 // Setup Express
 app.set('port', process.env.PORT || 9001)
@@ -25,7 +25,7 @@ app.post('/provision',     (req, res, next) => provision(iferr(next, wid => res.
 app.get ('/w/:wid',        (req, res, next) => getBalance(req.wallet, iferr(next,
                                                  balance => res.send({ ...req.wallet, balance }))))
 app.post('/w/:wid/pay',    (req, res, next) => (pay(req.wallet, req.body.dest, req.body.amount), res.sendStatus(204)))
-app.post('/w/:wid/settle', (req, res, next) => settle(req.wallet, iferr(next, res.send)))
+app.post('/w/:wid/settle', (req, res, next) => (settle(req.wallet, req.body.outpoint), res.sendStatus(204)))
 
 // send the full errors, JSON-formatted, when on development mode
 app.settings.env == 'development' && app.use((err, req, res, next) => {

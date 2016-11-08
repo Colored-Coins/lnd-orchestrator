@@ -66,6 +66,16 @@ tail -n 0 -f "$lndlog" --pid $$ | gawk --bignum -v SATOSHI=100000000 '
     print "__STATE_ACCEPT__ " m[1] " " m[4] " " m[5] " " m[6] " " (m[2]*SATOSHI) " " (m[3]*SATOSHI)
   }
 
+  match($0, /PEER: Executing cooperative closure of ChanPoint\(([a-f0-9]+:[0-9]+)\) with peerID\([0-9]+\), txid=([0-9a-f]+)/, m) {
+    # outpoint, txid, peerid
+    print "__CH_SETTLE_INIT__ " m[1] " " m[3] " " m[2]
+  }
+
+  match($0, /PEER: ChannelPoint\(([a-f0-9]+:[0-9]+)\) is now closed at height /, m) {
+    # outpoint
+    print "__CH_SETTLE_DONE__ " m[1]
+  }
+
   { fflush() }
 '
 
