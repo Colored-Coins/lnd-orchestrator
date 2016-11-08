@@ -40,7 +40,7 @@ module.exports = _ => ({
 
 , settle: (wallet, outpoint) =>
     lndClient(wallet.rpcport).closeChannel(
-      l(new CloseChannelRequest(toChannelPoint(outpoint)))
+      new CloseChannelRequest(toChannelPoint(outpoint))
     )
 })
 
