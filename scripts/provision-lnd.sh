@@ -74,10 +74,10 @@ rpcport=$((peerport + 1))
     rpub(wid, "ch_settle_done {\"outpoint\":\"" $2 "\"}")
   }
   $1 == "__ERROR__" {
-    rpub(wid, "error {\"msg\":" escjsonstr(substr($0, 11)) "}")
+    rpub(wid, "error {\"msg\":" escjsonstr(substr($0, 11)) "}", 1)
   }
   $1 == "__WARN__" {
-    rpub(wid, "warn {\"msg\":" escjsonstr(substr($0, 10)) "}")
+    rpub(wid, "warn {\"msg\":" escjsonstr(substr($0, 10)) "}", 1)
   }
   { fflush() }
 ' 2>&1 | tee -a /tmp/run-lnd-$wid.log | tee -a /tmp/run-lnd-parsed.log &
