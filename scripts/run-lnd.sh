@@ -77,11 +77,11 @@ tail -n 0 -f "$lndlog" --pid $$ | gawk --bignum -v SATOSHI=100000000 '
   }
 
   match($0, / \[ERR\] (.*)/, m) {
-    print "__ERROR__ lnd: " m[1]
-  }
-
-  match($0, /HSWC: Unable to send payment, insufficient capacity/, m) {
-    print "__WARN__ Insufficient capacity"
+    if (match(m[1], /HSWC: Unable to send payment, insufficient capacity/)) {
+      print "__WARN__ Unable to send payment, insufficient capacity"
+    } else {
+      print "__ERROR__ lnd: " m[1]
+    }
   }
 
   { fflush() }
