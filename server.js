@@ -16,7 +16,7 @@ const
 app.set('port', process.env.PORT || 9001)
 app.set('host', process.env.HOST || '127.0.0.1')
 
-app.param('wid', (req, res, next, wid) => loadWallet(wid, iferr(next, w => w ? (req.wallet=w, next()) : next(new Error('404')))))
+app.param('wid', (req, res, next, wid) => loadWallet(wid, iferr(next, w => w ? (req.wallet=w, next()) : next(404))))
 
 app.use(require('body-parser').json())
 app.use(require('morgan')('dev'))
@@ -26,6 +26,12 @@ app.get ('/w/:wid',        (req, res, next) => getBalance(req.wallet, iferr(next
                                                  balance => res.send({ ...req.wallet, balance }))))
 app.post('/w/:wid/pay',    (req, res, next) => (pay(req.wallet, req.body.dest, req.body.amount), res.sendStatus(204)))
 app.post('/w/:wid/settle', (req, res, next) => (settle(req.wallet, req.body.outpoint), res.sendStatus(204)))
+
+// handle special-purpose errors
+app.use((err, req, res, next) => {
+  if (+err === err) res.sendStatus(err)
+  else next(err)
+})
 
 // send the full errors, JSON-formatted, when on development mode
 app.settings.env == 'development' && app.use((err, req, res, next) => {

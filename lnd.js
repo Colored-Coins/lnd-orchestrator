@@ -20,9 +20,12 @@ module.exports = _ => ({
     //       but should be fixed eventually
 
     const proc = spawn(PROVISION_SCRIPT, {cwd: SCRIPTS, detached: true})
-    proc.stdout.on('data', d => {
-      let m = d.toString().match(/__WID__ (\S+)/)
-      m ? (proc.kill('SIGKILL'), cb(null, m[1])) : cb(new Error('invalid stdout, no wid: ' + d))
+    proc.stdout.on('data', b => {
+      let d = b.toString(), m
+
+      if (d === '__OVER_CAPACITY__\n') cb(503 /* Service Unavailable */)
+      else if (m = d.match(/__WID__ (\S+)/)) (proc.kill('SIGKILL'), cb(null, m[1]))
+      else cb(new Error('invalid stdout: ' + d))
     })
     proc.stderr.on('data', d => cb(new Error('provision-lnd stderr: ' + d.toString())))
     proc.on('error', cb)
