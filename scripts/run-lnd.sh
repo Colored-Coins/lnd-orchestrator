@@ -76,15 +76,14 @@ tail -n 0 -f "$lndlog" --pid $$ | gawk --bignum -v SATOSHI=100000000 '
     print "__CH_SETTLE_DONE__ " m[1]
   }
 
+  match($0, / \[ERR\] (.*)/, m) {
+    print "__ERROR__ lnd: " m[1]
+  }
+
+  match($0, /HSWC: Unable to send payment, insufficient capacity/, m) {
+    print "__WARN__ Insufficient capacity"
+  }
+
   { fflush() }
 '
-
-# VV wallet init, wallet ready
-# channel init, channel open (confirmed)
-# payment init, payment done
-# settle init, settle done (confirmed)
-
-#channel init: chanpoint, peer, capacity, my_balance
-
-# periodic balance updates
 
