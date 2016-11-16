@@ -15,13 +15,23 @@ rpcport=$((peerport + 1))
 
 # Provision new lnd daemon, parse output and publish to redis
 ./run-lnd.sh $wid $peerport $rpcport | gawk -v wid="$wid" -v REDIS="$REDIS" '
-  function redis(cmd) { print "REDIS: " cmd; system(REDIS" "cmd" &") }
+  function redis(cmd) { print "REDIS: " cmd; system(REDIS " " cmd " &") }
   function rpub(wid, data, pubonly) {
     if (index(data, "}")) sub(/\}$/, ",\"ts\":" systime() "}", data)
     else data = data " {\"ts\":" systime() "}"
 
-    redis("PUBLISH s:" wid " '\''" data "'\''")
-    if (!pubonly) redis("RPUSH e:" wid " '\''" data "'\''")
+    redis("PUBLISH s:" wid " " escshell(data))
+    if (!pubonly) redis("RPUSH e:" wid " " escshell(data))
+  }
+  function escshell(str) {
+    safe = str
+    gsub("'\''","'\''\"'\''\"", safe)
+    return "'\''" safe "'\''"
+  }
+  function escjsonstr(str) {
+    safe = str
+    gsub(/[\n\r\t\b\f'\''"\\]/, "\\\\&", safe)
+    return "\"" safe "\""
   }
 
   { print; }
