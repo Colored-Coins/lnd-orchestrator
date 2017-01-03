@@ -4,7 +4,7 @@ import brev from 'buffer-reverse'
 import { spawn } from 'child_process'
 import { fromStream  } from 'rx-node'
 import grpc from 'grpc'
-import { Lightning, ChannelBalanceRequest, SendRequest, CloseChannelRequest, ChannelPoint } from 'lnrpc'
+import { Lightning, ChannelBalanceRequest, SendRequest, CloseChannelRequest, ChannelPoint, Invoice } from 'lnrpc'
 
 const SCRIPTS = path.join(__dirname, 'scripts')
     , PROVISION_SCRIPT = path.join(SCRIPTS, 'provision-lnd-wid.sh')
@@ -33,25 +33,33 @@ module.exports = _ => ({
 
 , getBalance: (wallet, cb) =>
     lndClient(wallet.rpcport).channelBalance(
-      new ChannelBalanceRequest,
-      iferr(cb, b => cb(null, b.balance))
+      new ChannelBalanceRequest
+    , iferr(cb, b => cb(null, b.balance))
     )
 
-, pay: (wallet, dest, amt) =>
+, pay: (wallet, { dest, amount, rhash }) =>
     lndPayStream(wallet.rpcport)
-      .write(new SendRequest(toBuffer(dest), +amt))
+      .write(new SendRequest(toBuffer(dest), +amount, toBuffer(rhash || '')))
 
 , settle: (wallet, outpoint) =>
     lndClient(wallet.rpcport).closeChannel(
       new CloseChannelRequest(toChannelPoint(outpoint))
     )
+, addInvoice: (wallet, { amount, memo, receipt, preimage }, cb) =>
+    lndClient(wallet.rpcport)
+      .addInvoice(new Invoice({
+        value: +amount
+      , memo
+      , r_preimage: toBuffer(preimage)
+      , receipt: toBuffer(receipt || '')
+      }), iferr(cb, r => cb(null, r.r_hash)))
 })
 
 
 const toBuffer = x => new Buffer(x, 'hex')
     , toChannelPoint = (point, [ txid, index ] = point.split(':')) => new ChannelPoint({ funding_txid: brev(toBuffer(txid)), output_index: +index })
 
-  // @TODO: LRU
+// @TODO: LRU
 const lndClient = (_store => rpcport =>
   _store[rpcport] || (_store[rpcport] = new Lightning(LND_HOST+':'+rpcport, grpc.credentials.createInsecure()))
 )({})
